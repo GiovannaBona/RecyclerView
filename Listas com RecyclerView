@@ -1,0 +1,201 @@
+------------------
+  PASSO A PASSO
+------------------
+
+///PASSO 1
+*1. Para começarmos a utilizar, temos que trazer a lib como dependência do projeto:
+
+dependencies { 
+    compile 'com.android.support:appcompat-v7:23.3.0' compile 'com.android.support:design:23.3.0' compile    'com.android.support:recyclerview-v7:23.3.0' }
+
+
+///PASSO 2 - Inserindo o RecyclerView no layout.
+*2. Já podemos começar a usar todos os recursos dessa biblioteca! Vamos iniciar colocando ela num layout:
+
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent">
+<android.support.v7.widget.RecyclerView android:id="@+id/recycler" android:layout_width="match_parent" android:layout_height="match_parent" />
+</android.support.design.widget.CoordinatorLayout>
+
+
+///PASSO 3 - Pegando a referência do RecyclerView.
+*3. Por enquanto nada muito diferente do ListView: declaramos da mesma forma. Para usá-la precisaremos de uma referência para ela:
+
+public class MainActivity extends AppCompatActivity {
+@Override protected void onCreate(Bundle savedInstanceState) { 
+super.onCreate(savedInstanceState); 
+setContentView(R.layout.activity_main);
+RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler); }
+}
+
+
+///PASSO 4 - Criando uma entidade e lista de exemplo.
+*4. Como estamos tratando de uma view que mostrará uma lista, em algum momento teremos que fazer essa lista surgir magicamente em nosso código. Vamos criar uma lista de livros, para isso criaremos uma classe Livro:
+
+public class Livro {
+
+private final String nomeLivro; 
+private final String nomeAutor; 
+private final String descricao; 
+private final Double preco;
+
+public Livro(String nomeLivro, String nomeAutor, String descricao, Double preco) {
+
+this.nomeLivro = nomeLivro; 
+this.nomeAutor = nomeAutor; 
+this.descricao = descricao; 
+this.preco = preco; }
+
+public String getNomeLivro() { return nomeLivro; }
+public String getNomeAutor() { return nomeAutor; }
+public String getDescricao() { return descricao; }
+public Double getPreco() { return preco; } }
+
+*4. E agora vamos utilizar nossa lista de livros na nossa Activity :
+
+@Override protected void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState); setContentView(R.layout.activity_main);
+RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
+List<Livro> livros = // recupera do banco de dados ou webservice }
+
+
+///PASSO 5 - Implementando o adapter do RecyclerView
+*5. Está faltando pegarmos essa lista e a colocarmos para ser exibida, da mesma forma que ListView, mas como transformávamos mesmo nossos objetos em Views? Precisávamos criar um Adapter:
+
+
+@Override protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState); 
+setContentView(R.layout.activity_main);
+
+RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
+List<Livro> livros = // recupera do banco de dados ou webservice
+recyclerView.setAdapter(new NossoAdapter(livros));
+}
+
+
+*5 Para nosso código compilar, o objeto que precisamos passar deve ser um Adapter. Então, nossa classe precisará ser um também :
+
+public class NossoAdapter extends RecyclerView.Adapter {
+public NossoAdapter(List<Livro> livros) {
+} }
+
+
+*5 Para nossa classe ser um Adapter, temos que sobreescrever alguns métodos:
+
+public class NossoAdapter extends RecyclerView.Adapter {
+public NossoAdapter(List<Livro> livros) {
+}
+
+@Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) { return null; }
+@Override public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+}
+
+@Override public int getItemCount() { return 0; } }
+
+
+*5 Repare que nos deparamos com três métodos novos: onCreateViewHolder, onBindViewHolder, getItemCount, vamos entender um pouco mais sobre eles. O mais fácil de matarmos logo de cara é o getItemCount, que é a quantidade de itens que teremos, então vamos deixar nosso código certo:
+
+public class NossoAdapter extends RecyclerView.Adapter {
+private List<Livro> livros;
+public NossoAdapter(List<Livro> livros) { this.livros = livros; }
+@Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) { return null; }
+@Override public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+}
+@Override public int getItemCount() { return livros.size(); } }
+
+///PASSO 6 - Implementando o ViewHolder do RecyclerView
+*6. Vamos partir agora para o onCreateViewHolder, que é o método que criamos o ViewHolder, que fazíamos por boa prática no ListView. Além disso, é neste método que devemos inflar a view para vincular ao ViewHolder.
+Como esse ViewHolder saberá fazer os findViewById que precisaremos? Ele é muito genérico, não conseguirá resolver este problema! Mas nós, como ninjas da programação orientada a objetos, sabemos como resolver: iremos criar uma classe que herde desse tipo mais genérico e que faça o que nós precisamos! Veja:
+
+public class NossoViewHolder extends RecyclerView.ViewHolder {
+}
+
+
+*6 O compilador está reclamando que a classe pai tem um construtor que precisa de uma View. Vamos solucionar isso:
+
+
+public class NossoViewHolder extends RecyclerView.ViewHolder { 
+final TextView nome; 
+final TextView descricao; 
+final TextView preco;
+final TextView autor;
+public NossoViewHolder(View view) { 
+super(view); 
+nome = (TextView) 
+view.findViewById(R.id.item_livro_nome); // restante das buscas }
+
+}
+
+
+*6 Retornando ao problema inicial, agora podemos solucionar instanciando nosso ViewHolder:
+
+@Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+NossoViewHolder holder = new NossoViewHolder();
+return holder; }
+
+
+*6 Precisamos passar uma View para nosso código compilar:
+
+@Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+View view = LayoutInflater.from(context).inflate(R.layout.item_livro, parent, false); 
+NossoViewHolder holder = new NossoViewHolder(view);
+return holder; }
+
+*6 Perceba que precisamos providenciar um Context para que nosso LayoutInflater possa funcionar direitinho :
+
+
+public class NossoAdapter extends RecyclerView.Adapter {
+private List<Livro> livros; private Context context
+public NossoAdapter(List<Livro> livros, Context context) { 
+this.livros = livros; 
+this.context = context; 
+}
+// restante do código
+}
+
+
+*6 Precisamos passar uma View para nosso código compilar:
+
+@Override public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+View view = LayoutInflater.from(context).inflate(R.layout.item_livro, parent, false); 
+NossoViewHolder holder = new NossoViewHolder(view);
+return holder; }
+
+
+*6 Perceba que precisamos providenciar um Context para que nosso LayoutInflater possa funcionar direitinho :
+
+
+public class NossoAdapter extends RecyclerView.Adapter {
+private List<Livro> livros; private Context context
+public NossoAdapter(List<Livro> livros, Context context) { 
+this.livros = livros; 
+this.context = context; 
+}
+// restante do código
+}
+
+
+*6 E na nossa Activity :
+
+@Override protected void onCreate(Bundle savedInstanceState) { 
+super.onCreate(savedInstanceState); 
+setContentView(R.layout.activity_main);
+RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
+List<Livro> livros = // recupera do banco de dados ou webservice
+recyclerView.setAdapter(new NossoAdapter(livros, this)); }
+
+
+///PASSO 7 - Populando cada item do RecyclerView.
+*7. E agora o que ficou faltando fazermos? Apenas popularmos cada item, com as informações do livro.
+É exatamente o que faremos no método onBindViewHolder, por isso recebemos um ViewHolder, aquele que foi criado no método onCreateViewHolder, com isso conseguimos popular de maneira que desejamos.
+
+
+@Override public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+NossoViewHolder holder = (NossoViewHolder) viewHolder; 
+Livro livro = livros.get(position) ;
+holder.nome.setText(livro.getNome()); //demais campos
+}
+
+----------------------
+  SITE UTILIZADO!!!
+----------------------
+
+Link> https://www.alura.com.br/artigos/criando-listas-com-recyclerview#inserindo-o-recyclerview-no-layout
