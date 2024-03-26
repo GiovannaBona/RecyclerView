@@ -1,2 +1,3 @@
-# RecyclerView
-Criando listas com RecyclerView
+# DetalhesPI
+
+Detalhes faltando no pi
